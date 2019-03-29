@@ -9,7 +9,7 @@ public class AIBT : MonoBehaviour
     public int ScanSize = 10;
     Root m_Ai = BT.Root();
     AgentBehaviour agentBehaviour;
-    Player playerController;
+    AIBehaviour aiBehaviour;
 
     private Collider2D[] surrounds;
     private List<Player> surroundPlayers;
@@ -20,20 +20,20 @@ public class AIBT : MonoBehaviour
     private void OnEnable()
     {
         agentBehaviour = GetComponent<AgentBehaviour>();
-        playerController = GetComponent<Player>();
+        aiBehaviour = GetComponent<AIBehaviour>();
         layerMask = LayerMask.NameToLayer("Elemnet");
         m_Ai.AddBehaviours(
             BT.Selector().AddBehaviours(
                  BT.Sequence().AddBehaviours(
-                     BT.Condition(() => { return playerController.getCircleElementsNum() > 2; }),
+                     BT.Condition(() => { return aiBehaviour.getCircleElementsNum() > 2; }),
                     //如果没有发现敌人和方块则自由移动
                      BT.Sequence().AddBehaviours(
                          //如果没有发现
                          BT.If(() => { return !isFindElement && !isFindPlayer; }).AddBehaviours(
                              //进行随机移动
-                             BT.Call(agentBehaviour.RandomWalk),
+                             BT.Call(agentBehaviour.RandomWalk)
                              //进行随搜
-                             BT.Call(CheckForAround)
+                             //BT.Call(CheckForAround)
                              ),
                          //如果有发现
                          BT.If(() => { return isFindElement; }).AddBehaviours(
@@ -54,7 +54,7 @@ public class AIBT : MonoBehaviour
         m_Ai.Tick();
     }
 
-
+    /*
     public void CheckForAround()
     {
         surrounds = Physics2D.OverlapCircleAll(transform.position, ScanSize, layerMask);
@@ -93,8 +93,8 @@ public class AIBT : MonoBehaviour
         }
 
     }
-
-
+    
+*/
 
 
 }

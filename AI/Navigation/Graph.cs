@@ -8,8 +8,8 @@ namespace CJS.AI
     public class Graph : MonoBehaviour
     {
         protected List<Vertex> vertices;
-        protected List<List<Vertex>> neighbours;
-        protected List<List<Vertex>> costs;
+        protected List<List<Vertex>> neighbors;
+        protected List<List<float>> costs;
 
         protected virtual void Start()
         {
@@ -24,7 +24,7 @@ namespace CJS.AI
             return vertices.Count;
         }
 
-        public virtual Vertex GetNearestVertex(Vector3 position)
+        public virtual Vertex GetNearestVertex(Vector2 position)
         {
             return null;
         }
@@ -41,12 +41,34 @@ namespace CJS.AI
         }
         public virtual Vertex[] GetNeighbours(Vertex v)
         {
-            if (neighbours == null || neighbours.Count == 0)
+            if (neighbors == null || neighbors.Count == 0)
                 return new Vertex[0];
-            if(v.id<0||v.id>=neighbours.Count)
+            if(v.id<0||v.id>= neighbors.Count)
                 return new Vertex[0];
-            return neighbours[v.id].ToArray();
+            return neighbors[v.id].ToArray();
         }
+
+        public virtual Edge[] GetEdges(Vertex v)
+        {
+            if (ReferenceEquals(neighbors, null) || neighbors.Count == 0)
+                return new Edge[0];
+            if (v.id < 0 || v.id >= neighbors.Count)
+                return new Edge[0];
+            int numEdges = neighbors[v.id].Count;
+            Edge[] edges = new Edge[numEdges];
+            List<Vertex> vertexList = neighbors[v.id];
+            List<float> costList = costs[v.id];
+            for (int i = 0; i < numEdges; i++)
+            {
+                edges[i] = new Edge();
+                edges[i].cost = costList[i];
+                edges[i].vertex = vertexList[i];
+            }
+            return edges;
+        }
+
+
+        
     }
 
 

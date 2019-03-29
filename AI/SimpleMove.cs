@@ -8,7 +8,7 @@ public class SimpleMove : MonoBehaviour
     // Start is called before the first frame update
     private Rigidbody2D rigidbody2D;
 
-
+    
     private void Awake()
     {
         rigidbody2D = GetComponent<Rigidbody2D>();

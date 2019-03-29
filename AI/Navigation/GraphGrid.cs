@@ -53,8 +53,8 @@ namespace CJS.AI
                     line = streamReader.ReadLine();
 
                     vertices = new List<Vertex>(numRows * numCols);
-                    neighbours = new List<List<Vertex>>(numRows * numCols);
-                    costs = new List<List<Vertex>>(numRows * numCols);
+                    neighbors = new List<List<Vertex>>(numRows * numCols);
+                    costs = new List<List<float>>(numRows * numCols);
                     vertexObjs = new GameObject[numRows * numCols];
                     mapVertices = new bool[numRows, numCols];
 
@@ -87,7 +87,7 @@ namespace CJS.AI
             LoadMap(mapName);
         }
 
-        public override Vertex GetNearestVertex(Vector3 position)
+        public override Vertex GetNearestVertex(Vector2 position)
         {
             int col = Mathf.FloorToInt(position.x / cellSize);
             int row = Mathf.FloorToInt(position.y / cellSize);

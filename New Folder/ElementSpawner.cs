@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using Photon.Pun;
-using Photon.Realtime;
 
 
-public class ElementSpawner : MonoBehaviourPunCallbacks
+public class ElementSpawner : MonoBehaviour
 {
 
 
@@ -68,10 +66,7 @@ public class ElementSpawner : MonoBehaviourPunCallbacks
             }
 
             if (GameManager.Instance.elementNum <= elementAmout&&!isPlayerIn)
-            {
-                if (GameManager.Instance.isNet)
-                    PhotonNetwork.InstantiateSceneObject(prep, transform.position, Quaternion.Euler(0, 0, Random.value * 360.0f), 0);
-                else
+            {              
                 Instantiate(Elements[type], transform.position, Quaternion.Euler(0, 0, Random.value * 360.0f));
                 GameManager.Instance.elementNum++;
             }
@@ -99,44 +94,4 @@ public class ElementSpawner : MonoBehaviourPunCallbacks
        transform.position =  Random.insideUnitCircle* worldSize;
 
     }
-
-    public override void OnMasterClientSwitched(Player newMasterClient)
-    {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            StartCoroutine(SpawnElement());
-        }
-    }
-    /*
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        print("On Trigger");
-
-        if (!PhotonNetwork.IsMasterClient&&GameManager.Instance.isNet)
-        {
-            return;
-        }
-        if (collision.gameObject.layer == layerMask)
-        {
-            Rigidbody2D rigidbody = collision.GetComponent<Rigidbody2D>();
-            if (rigidbody == null)
-            {
-                rigidbody = collision.GetComponentInParent<Rigidbody2D>();
-            }
-            Vector2 direction = rigidbody.position - (Vector2)gameObject.transform.position;
-            direction.Normalize();
-            float distance = direction.magnitude;
-            Vector2 force = direction*(collider2D.radius - distance);
-            print("force is " + (collider2D.radius - distance));
-            print(rigidbody.velocity.magnitude);           
-                rigidbody.AddForce(force);
-            
-
-        }
-        
-    }*/
-
-    
-
-
 }

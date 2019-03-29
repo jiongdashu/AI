@@ -9,6 +9,7 @@ public class Agent : MonoBehaviour
 
     private float rotation;
     private Vector2 velocity;
+    
     private Rigidbody2D rigidbody2D;
     private Steering m_Steering;
     private Vector2 m_PreviousPosition;
@@ -18,6 +19,8 @@ public class Agent : MonoBehaviour
     {
         velocity = Vector3.zero;
         rigidbody2D = GetComponent<Rigidbody2D>();
+        m_Steering = new Steering(Vector2.zero,0);
+
     }
     protected virtual void Update()
     {
@@ -63,7 +66,8 @@ public class Agent : MonoBehaviour
 
         rigidbody2D.AddForce(m_Steering.accel);
         m_Movement = Vector2.zero;
-
+        Debug.DrawRay(transform.position, m_Steering.accel, Color.red);
+        
     }
     private void ProcessRotation()
     {

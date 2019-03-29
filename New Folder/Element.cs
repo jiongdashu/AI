@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using Photon.Pun;
-using Photon.Realtime;
-using PlayerController = CJS.Player;
+using CJS;
 
-public class Element : MonoBehaviour,IPunObservable
+
+public class Element : MonoBehaviour
 {
     //0,1,2
     public int type;
@@ -29,8 +28,8 @@ public class Element : MonoBehaviour,IPunObservable
     protected Rigidbody2D rigidbody2d;
     protected SpriteRenderer spriteRenderer;
     protected FixedJoint2D fixedJoint2D;
-    private ParticleSystem particleSystem;
-    PhotonView photonView;
+    //private ParticleSystem particleSystem;
+
     
     int layerMask;
     int m_scale;
@@ -43,27 +42,25 @@ public class Element : MonoBehaviour,IPunObservable
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         layerMask = LayerMask.NameToLayer("Element");
-        rigidbody2d = GetComponent<Rigidbody2D>();
-        fixedJoint2D = GetComponent<FixedJoint2D>();
-        
+        rigidbody2d = GetComponent<Rigidbody2D>();    
         if (!isFirst)
         {
-            particleSystem = ConnectVFX.GetComponent<ParticleSystem>();
+            fixedJoint2D = GetComponent<FixedJoint2D>();
+            //particleSystem = ConnectVFX.GetComponent<ParticleSystem>();
             fixedJoint2D.enabled = false;
-        }
-        
-        if (GameManager.Instance.isNet)
-        {
-            photonView = GetComponent<PhotonView>();          
-        }
+            ElementInitialize();
+        }      
+    }
+
+    public void ElementInitialize()
+    {
         float speedX = Random.Range(-1f, 1f) * Random.Range(initSpeed / 2f, initSpeed);
         float speedY = Random.Range(-1f, 1f) * Random.Range(initSpeed / 2f, initSpeed);
         Vector2 velocity = new Vector2(speedX, speedY);
         int initialHealth = Random.Range(GameConst.MIN_HEALTH, GameConst.MAX_HEALTH);
-            
         rigidbody2d.AddForce(velocity);
         health = initialHealth;
-        
+        is_Invincible = true;
         timer = 0;
     }
 
@@ -95,27 +92,17 @@ public class Element : MonoBehaviour,IPunObservable
         }
     }
     private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (GameManager.Instance.isNet)
-        {
-            if(!photonView.IsMine)
-            return;
-        }
+    {       
         if (is_Invincible)
         {
             return;
         }
-       
-
-
         if (collision.gameObject.layer != layerMask)
         {
             return;
         }
-        print("..." + collision.gameObject.name);
-        Element other = collision.gameObject.GetComponent<Element>();
-        print("..."+other);
-        //我连它没连，不管
+        
+        Element other = collision.gameObject.GetComponent<Element>();             
         if (is_Connected && !other.is_Connected)
         {
             return;
@@ -124,27 +111,9 @@ public class Element : MonoBehaviour,IPunObservable
 
         if (!is_Connected && other.is_Connected)
         {
-            //不能photonView.RPC("ConnectToPlayer", RpcTarget.AllViaServer, other.PlayerID);
-            
-            int playId = other.PlayerID;
-           
-            
-            if (GameManager.Instance.isNet)
-            {
-                Player player = PhotonNetwork.CurrentRoom.GetPlayer(playId);
-                print(player == PhotonNetwork.LocalPlayer);
-                photonView.TransferOwnership(playId);
-                print(player == PhotonNetwork.LocalPlayer);
-                photonView.RPC("ConnectToPlayer", player, playId);
-            }
-            else
-            {
-                ConnectToPlayer(other, playId);
-            }
-            
-            
-            
-           
+            //不能photonView.RPC("ConnectToPlayer", RpcTarget.AllViaServer, other.PlayerID);          
+            int playId = other.PlayerID;                                
+            ConnectToPlayer(other, playId);                 
         }
         else if (is_Connected && other.is_Connected)
         {
@@ -159,12 +128,12 @@ public class Element : MonoBehaviour,IPunObservable
 
     }
 
-    [PunRPC]
+
     public void ConnectToPlayer(int playerID,int index)
     {
         print("RPC CAll"+playerID);
         
-        PlayerController player = GameManager.Instance.playList[playerID];
+        Player player = GameManager.Instance.playList[playerID];
         Element element = player.GetElement(index);
        // player.AddElement(element,this);
         fixedJoint2D.connectedBody = element.rigidbody2d;
@@ -182,8 +151,8 @@ public class Element : MonoBehaviour,IPunObservable
 
     public void ConnectToPlayer(Element element,int playerID)
     {
-        PlayerController player = GameManager.Instance.playList[playerID];
-        player.AddElement(element);
+        Player player = GameManager.Instance.playList[playerID];
+        player.AddElement(this);
         fixedJoint2D.connectedBody = element.rigidbody2d;
         fixedJoint2D.enabled = true;
         gameObject.tag = element.gameObject.tag;
@@ -191,8 +160,8 @@ public class Element : MonoBehaviour,IPunObservable
         is_Connected = true;
         PlayerID = playerID;
         Vector2 position = (element.transform.position + transform.position) / 2;
-        ConnectVFX.transform.position = position;
-        particleSystem.Play();
+        //ConnectVFX.transform.position = position;
+        //particleSystem.Play();
 
 
         if (type == 0)
@@ -214,17 +183,9 @@ public class Element : MonoBehaviour,IPunObservable
             if (health <= 0)
             {
                 if (!isFirst)
-                {
-                    if (GameManager.Instance.isNet)
-                    {
-                        PhotonNetwork.Destroy(gameObject);
-                    }
-                    else
-                    {
-                        GameManager.Instance.elementNum--;
-                        Destroy(gameObject);
-                    }
-                    
+                {                                     
+                 GameManager.Instance.elementNum--;
+                 Destroy(gameObject);                                        
                 }
                 else
                 {
@@ -242,16 +203,5 @@ public class Element : MonoBehaviour,IPunObservable
         
     }
 
-    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-    {
-        if (stream.IsWriting)
-        {
-            stream.SendNext(this.health);
-
-        }
-        else
-        {
-            this.health = (int)stream.ReceiveNext();
-        }
-    }
+   
 }

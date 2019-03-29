@@ -12,7 +12,8 @@ public class AgentBehaviour : MonoBehaviour
     public float targetRadius;
     public float slowRadius;
     public float timeToTarget;
-
+    [HideInInspector]
+    public bool isArrived;
     [Header("Leave")]
     public float escapeRadius;
     public float dangerRadius;
@@ -21,7 +22,7 @@ public class AgentBehaviour : MonoBehaviour
     protected Agent agent;
     protected Steering steering;
     
-    private Rigidbody2D rigidbody2D;
+    protected Rigidbody2D rigidbody2D;
     private Rigidbody2D targetRigidbody2D;
     private void Awake()
     {
@@ -29,6 +30,7 @@ public class AgentBehaviour : MonoBehaviour
         rigidbody2D = GetComponent<Rigidbody2D>();
 
         steering = new Steering(Vector2.zero,0);
+        target.transform.SetParent(null);
         Initialnize();
     }
     protected virtual void Update()
@@ -42,13 +44,14 @@ public class AgentBehaviour : MonoBehaviour
 
     }
 
-    public void SetTarget(GameObject target)
+    public void SetTargetPosition(Vector2 position)
     {
-        this.target = target;
+        this.target.transform.position = position;
     }
     public void ResetTarget()
     {
-        this.target = null;
+        this.target.transform.position = gameObject.transform.position;
+
     }
 
     public virtual Steering GetSteering()
@@ -107,8 +110,9 @@ public class AgentBehaviour : MonoBehaviour
         if (distance < targetRadius)
         {
             steering.ResetSteering();
-            
-        }else if (distance > slowRadius)
+            isArrived = true;
+        }
+        else if (distance > slowRadius)
         {
             speed = agent.maxSpeed;
         }
@@ -161,8 +165,6 @@ public class AgentBehaviour : MonoBehaviour
         steering.accel = desiredVelocity - rigidbody2D.velocity;
         steering.accel /= timeToTarget;
         steering.accel = Vector2.ClampMagnitude(steering.accel, agent.maxAccel);
-
-        
 
     }
 

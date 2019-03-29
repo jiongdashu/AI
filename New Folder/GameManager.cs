@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-using Photon.Pun;
-using Photon.Realtime;
 using Cinemachine;
 using Photon.Pun.UtilityScripts;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
@@ -12,16 +10,16 @@ using ExitGames.Client.Photon;
 
 using PlayerController = CJS.Player;
 
-public class GameManager : MonoBehaviourPunCallbacks
+public class GameManager : MonoBehaviour
 {
 
     public static GameManager Instance= null;
     public int WorldSize = 10;
     public bool isNet = false;
     public GameObject Player;
-    public Text InfoText;
+    public GameObject AI;
     public Transform[] SpawnerPosition;
-    public int RoomNum = 2;
+    public int RoomNum = 1;
     
     [HideInInspector]
     public int playerNum;
@@ -42,47 +40,24 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     }
 
-    public override void OnEnable()
-    {
-        base.OnEnable();
-        CountdownTimer.OnCountdownTimerHasExpired += OnCountdownTimerIsExpired;
-
-    }
-
     private void Start()
     {
-        InfoText.text = "Waiting For other Player";
-        elementNum = 0;
-        if (!isNet)
-        {
-            playerNum = 0;
-            StartGame();
-        }
-        else
-        {
-            Hashtable props = new Hashtable
-            {
-                { GameConst.PLAYER_LOADED_LEVEL,true}
-            };
-            print("Game Manager Start()" + PhotonNetwork.LocalPlayer);
-            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-        }
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-
-        CountdownTimer.OnCountdownTimerHasExpired -= OnCountdownTimerIsExpired;
+       
+        elementNum = 0;   
+        playerNum = 0;
+        StartGame();
+       
     }
 
     public void RegistPlayer(int playerId,PlayerController player)
     {
         playList.Add(playerId, player);
+        playerNum++;
     }
     public void UnRegistPlayer(int playerId,PlayerController player)
     {
         playList.Remove(playerId);
+        playerNum--;
     }
 
     public void SetCameraObject(Transform target)
@@ -96,56 +71,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         float timer = 5.0f;
         while (timer >= 0)
         {
-            InfoText.text= string.Format("Player {0} won with {1} points.\n\n\nReturning to login screen in {2} seconds.", winner, score, timer.ToString("n2"));
+            //InfoText.text= string.Format("Player {0} won with {1} points.\n\n\nReturning to login screen in {2} seconds.", winner, score, timer.ToString("n2"));
             yield return new WaitForEndOfFrame();
             timer -= Time.deltaTime;
         }
-        PhotonNetwork.LeaveRoom();
-    }
-
-
-    public override void OnDisconnected(DisconnectCause cause)
-    {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("DemoAsteroids-LobbyScene");
-    }
-
-    
-
-    public override void OnLeftRoom()
-    {
-        PhotonNetwork.Disconnect();
-    }
-
-    public override void OnPlayerLeftRoom(Player otherPlayer)
-    {
         
-    }
-
-    public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
-    {
-        /*
-        if (changedProps.ContainsKey(AsteroidsGame.PLAYER_LIVES))
-        {
-            CheckEndOfGame();
-            return;
-        }*/
-
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            return;
-        }
-
-        if (changedProps.ContainsKey(GameConst.PLAYER_LOADED_LEVEL))
-        {
-            if (CheckAllPlayerLoadedLevel())
-            {
-                Hashtable props = new Hashtable
-                    {
-                        {CountdownTimer.CountdownStartTime, (float) PhotonNetwork.Time}
-                    };
-                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-            }
-        }
     }
 
     private void StartGame()
@@ -153,64 +83,34 @@ public class GameManager : MonoBehaviourPunCallbacks
         //Vector2 position = Random.insideUnitCircle * WorldSize;
 
         int playerID;
-
         Vector2 position;
-        
-
-
-        if (isNet)
+        for (int i = 0; i < RoomNum; i++)
         {
-            playerID = PhotonNetwork.LocalPlayer.ActorNumber;
-            position = SpawnerPosition[playerID - 1].position;
-            PhotonNetwork.Instantiate("Player", position, Quaternion.identity, 0);
-        }
-            
-        else
-        {
-            
-            for (int i = 0; i < RoomNum; i++)
+            position = SpawnerPosition[i].position;
+            Instantiate(Player, position, Quaternion.identity);
+            /*
+            if (i > 0)
             {
-                position = SpawnerPosition[i].position;
-                Instantiate(Player, position, Quaternion.identity);
+                GameObject ai = Instantiate(AI, position, Quaternion.identity);
+                PlayerController controller = ai.GetComponent<PlayerController>();
                 
             }
-            
+            else
+            {
+                Instantiate(Player, position, Quaternion.identity);
+            }*/
         }
-            
-        foreach(ElementSpawner spawner in spawners){
+
+
+
+        foreach (ElementSpawner spawner in spawners){
             spawner.StartSpawn();
         }
 
 
     }
 
-    private bool CheckAllPlayerLoadedLevel()
-    {
-        foreach (Player p in PhotonNetwork.PlayerList)
-        {
-            object playerLoadedLevel;
-
-            if (p.CustomProperties.TryGetValue(GameConst.PLAYER_LOADED_LEVEL, out playerLoadedLevel))
-            {
-                if ((bool)playerLoadedLevel)
-                {
-                    continue;
-                }
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-    private void OnCountdownTimerIsExpired()
-    {
-        StartGame();
-    }
-
     
-
-
 }
 
 public class GameConst

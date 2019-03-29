@@ -8,14 +8,8 @@ namespace CJS.AI
     public class Vertex : MonoBehaviour
     {
         public int id;
-        public List<Edge> neighbours;      
+        public List<Edge> neighbours = new List<Edge>();      
         public Vertex prev;
-
-        private void Awake()
-        {
-           
-        }
-
     }
 
 }
