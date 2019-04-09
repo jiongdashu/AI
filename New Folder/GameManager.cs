@@ -4,9 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using Cinemachine;
-using Photon.Pun.UtilityScripts;
-using Hashtable = ExitGames.Client.Photon.Hashtable;
-using ExitGames.Client.Photon;
+using CJS;
 
 using PlayerController = CJS.Player;
 
@@ -87,18 +85,16 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < RoomNum; i++)
         {
             position = SpawnerPosition[i].position;
-            Instantiate(Player, position, Quaternion.identity);
-            /*
+            //Instantiate(Player, position, Quaternion.identity);
+            
             if (i > 0)
             {
-                GameObject ai = Instantiate(AI, position, Quaternion.identity);
-                PlayerController controller = ai.GetComponent<PlayerController>();
-                
+                 Instantiate(AI, position, Quaternion.identity);                           
             }
             else
             {
                 Instantiate(Player, position, Quaternion.identity);
-            }*/
+            }
         }
 
 

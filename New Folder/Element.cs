@@ -1,12 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.Events;
 using CJS;
 
 
 public class Element : MonoBehaviour
 {
+    [System.Serializable]
+    public class DamageEvent : UnityEvent { };
+    [System.Serializable]
+    public class ConnectEvent : UnityEvent<Element> { };
+
     //0,1,2
     public int type;
     public bool isFirst;
@@ -19,7 +24,12 @@ public class Element : MonoBehaviour
     public bool is_Invincible;
     public GameObject ConnectVFX;
     public GameObject DamagedVFX;
+    public Sprite[] ElementSprites;
     public ElementObject elementObject;
+    public LayerMask layerMask;
+
+    public DamageEvent OnDie;
+    public ConnectEvent OnConnect;
     [HideInInspector]
     public List<Element> children;
     
@@ -28,10 +38,11 @@ public class Element : MonoBehaviour
     protected Rigidbody2D rigidbody2d;
     protected SpriteRenderer spriteRenderer;
     protected FixedJoint2D fixedJoint2D;
+    
     //private ParticleSystem particleSystem;
 
     
-    int layerMask;
+   
     int m_scale;
     float timer;
 
@@ -41,7 +52,7 @@ public class Element : MonoBehaviour
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        layerMask = LayerMask.NameToLayer("Element");
+        
         rigidbody2d = GetComponent<Rigidbody2D>();    
         if (!isFirst)
         {
@@ -54,14 +65,23 @@ public class Element : MonoBehaviour
 
     public void ElementInitialize()
     {
+
+        int randomType = Random.Range(0, ElementSprites.Length);
+        int initialHealth = Random.Range(GameConst.MIN_HEALTH, GameConst.MAX_HEALTH);       
+        health = initialHealth;
+        is_Invincible = true;
+        is_Connected = false;
+        type = randomType;
+        spriteRenderer.sprite = ElementSprites[type];
+        PlayerID = -1;
+        timer = 0;
+
+
+        
         float speedX = Random.Range(-1f, 1f) * Random.Range(initSpeed / 2f, initSpeed);
         float speedY = Random.Range(-1f, 1f) * Random.Range(initSpeed / 2f, initSpeed);
         Vector2 velocity = new Vector2(speedX, speedY);
-        int initialHealth = Random.Range(GameConst.MIN_HEALTH, GameConst.MAX_HEALTH);
         rigidbody2d.AddForce(velocity);
-        health = initialHealth;
-        is_Invincible = true;
-        timer = 0;
     }
 
     public void initialnize(int health,int playID)
@@ -97,7 +117,8 @@ public class Element : MonoBehaviour
         {
             return;
         }
-        if (collision.gameObject.layer != layerMask)
+        
+        if ((1<<collision.gameObject.layer&layerMask.value)==0)
         {
             return;
         }
@@ -151,6 +172,11 @@ public class Element : MonoBehaviour
 
     public void ConnectToPlayer(Element element,int playerID)
     {
+        if (OnConnect != null)
+        {
+            OnConnect.Invoke(this);
+        }
+       
         Player player = GameManager.Instance.playList[playerID];
         player.AddElement(this);
         fixedJoint2D.connectedBody = element.rigidbody2d;
@@ -183,9 +209,9 @@ public class Element : MonoBehaviour
             if (health <= 0)
             {
                 if (!isFirst)
-                {                                     
-                 GameManager.Instance.elementNum--;
-                 Destroy(gameObject);                                        
+                {
+                    if (OnDie != null)
+                        OnDie.Invoke();
                 }
                 else
                 {

@@ -1,4 +1,4 @@
-﻿using System;
+﻿
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,6 +7,10 @@ public class AgentBehaviour : MonoBehaviour
 {
     public GameObject target;
     public int maxPrediction=10;
+    [Header("Random Run")]
+    public float changeDirectionSpeed;
+    [HideInInspector]
+    public float nextChangeTime;
 
     [Header ("Arrive")] 
     public float targetRadius;
@@ -29,8 +33,7 @@ public class AgentBehaviour : MonoBehaviour
         agent = GetComponent<Agent>();
         rigidbody2D = GetComponent<Rigidbody2D>();
 
-        steering = new Steering(Vector2.zero,0);
-        target.transform.SetParent(null);
+        steering = new Steering(Vector2.zero,0);        
         Initialnize();
     }
     protected virtual void Update()
@@ -43,24 +46,40 @@ public class AgentBehaviour : MonoBehaviour
     {
 
     }
-
+    public void SetTarget(GameObject t)
+    {
+        this.target = t;
+        this.targetRigidbody2D = t.GetComponent<Rigidbody2D>();
+    }
+    public void ResetTarget()
+    {
+        this.target = null;
+    }
     public void SetTargetPosition(Vector2 position)
     {
         this.target.transform.position = position;
     }
-    public void ResetTarget()
-    {
-        this.target.transform.position = gameObject.transform.position;
-
-    }
+    
 
     public virtual Steering GetSteering()
     {
         return steering;
     }
-
+    public void SetNextChangeTime()
+    {
+        
+        nextChangeTime = Time.time + changeDirectionSpeed;
+    }
     public void RandomWalk()
     {
+        
+        if (Time.time >= nextChangeTime)
+        {
+            nextChangeTime = Time.time + changeDirectionSpeed;
+            Vector2 direction = Random.insideUnitCircle;
+            steering.accel = direction * agent.maxAccel;
+        }
+         
 
     }
 
@@ -82,8 +101,7 @@ public class AgentBehaviour : MonoBehaviour
 
     public void Pursue()
     {
-       
-
+      
         //1.得到距离目标的距离与目标当前速度与方向
         Vector3 direction = target.transform.position - transform.position;
         float distance = direction.magnitude;
@@ -103,6 +121,10 @@ public class AgentBehaviour : MonoBehaviour
 
     public void Arrive()
     {
+        if (!target)
+        {
+            return;
+        }
         Vector3 direction = target.transform.position - transform.position;
         float distance = direction.magnitude;
         //1.确定速度

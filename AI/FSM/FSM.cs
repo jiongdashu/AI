@@ -40,7 +40,17 @@ namespace CJS.AI
             
         }
     }
+    public class ConditionOr : FSMCondition
+    {
+        public FSMCondition condition1;
+        public FSMCondition condition2;
 
+        public override bool Test()
+        {
+            return condition1.Test() || condition2.Test();
+
+        }
+    }
     public class ConditionAnd : FSMCondition
     {
         public FSMCondition condition1;

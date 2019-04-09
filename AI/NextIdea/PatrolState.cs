@@ -15,7 +15,7 @@ namespace CJS.AI
             aiBehaviour = GetComponent<AIBehaviour>();
 
             FSMFnCondition fSMFnCondition = new FSMFnCondition();
-            fSMFnCondition.fn = aiBehaviour.CheckForAround;
+            fSMFnCondition.fn = aiBehaviour.isFindTarget;
             FSMTransition transition = new FSMTransition();
             transition.condition = fSMFnCondition;
             transition.target = TraceState;
@@ -26,13 +26,18 @@ namespace CJS.AI
         public override void OnEnable()
         {
             print("FSM enter PatrolState");
-            base.OnEnable();
+            
         }
 
         public override void Update()
         {
-            aiBehaviour.TraceTarget(true);
-            base.Update();
+            aiBehaviour.RandomRun();
+           
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable();
         }
     }
 
